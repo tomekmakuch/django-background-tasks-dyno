@@ -309,7 +309,6 @@ def autodiscover():
     from django.conf import settings
 
     for app in settings.INSTALLED_APPS:
-        app = app.split('.')[0]
         try:
             import_module(app).__path__
         except (AttributeError, ImportError):
