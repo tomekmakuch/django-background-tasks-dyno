@@ -44,11 +44,13 @@ class TaskManager(models.Manager):
     def created_by(self, creator):
         return self.get_queryset().created_by(creator)
 
-    def find_available(self, queue=None):
+    def find_available(self, queue=None, exclude_queue=None):
         now = timezone.now()
         qs = self.unlocked(now)
         if queue:
             qs = qs.filter(queue=queue)
+        if exclude_queue:
+            qs = qs.exclude(queue=exclude_queue)
         ready = qs.filter(run_at__lte=now, failed_at=None)
         _priority_ordering = '{}priority'.format(app_settings.BACKGROUND_TASK_PRIORITY_ORDERING)
         ready = ready.order_by(_priority_ordering, 'run_at')
