@@ -134,8 +134,8 @@ class Tasks(object):
         else:
             self._bg_runner(proxy_task, task, *args, **kwargs)
 
-    def run_next_task(self, queue=None):
-        return self._runner.run_next_task(self, queue)
+    def run_next_task(self, queue=None, exclude_queue=None):
+        return self._runner.run_next_task(self, queue=queue, exclude_queue=exclude_queue)
 
 
 class TaskSchedule(object):
@@ -241,9 +241,9 @@ class DBTaskRunner(object):
         signals.task_created.send(sender=self.__class__, task=task)
         return task
 
-    def get_task_to_run(self, tasks, queue=None):
+    def get_task_to_run(self, tasks, queue=None, exclude_queue=None):
         try:
-            available_tasks = [task for task in Task.objects.find_available(queue)
+            available_tasks = [task for task in Task.objects.find_available(queue=queue, exclude_queue=exclude_queue)
                                if task.task_name in tasks._tasks][:5]
             for task in available_tasks:
                 # try to lock task
@@ -258,8 +258,8 @@ class DBTaskRunner(object):
         logger.info('Running %s', task)
         tasks.run_task(task)
 
-    def run_next_task(self, tasks, queue=None):
-        task = self.get_task_to_run(tasks, queue)
+    def run_next_task(self, tasks, queue=None, exclude_queue=None):
+        task = self.get_task_to_run(tasks, queue=queue, exclude_queue=exclude_queue)
         if task:
             self.run_task(tasks, task)
             return True

@@ -52,6 +52,11 @@ class Command(BaseCommand):
             'dest': 'queue',
             'help': 'Only process tasks on this named queue',
         }),
+        (('--exclude-queue', ), {
+            'action': 'store',
+            'dest': 'exclude_queue',
+            'help': 'Don\'t process tasks on this named queue',
+        }),
         (('--log-std', ), {
             'action': 'store_true',
             'dest': 'log_std',
@@ -82,6 +87,7 @@ class Command(BaseCommand):
         duration = options.get('duration', 0)
         sleep = options.get('sleep', 5.0)
         queue = options.get('queue', None)
+        exclude_queue = options.get('exclude_queue', None)
         log_std = options.get('log_std', False)
         is_dev = options.get('dev', False)
         sig_manager = self.sig_manager
@@ -102,7 +108,7 @@ class Command(BaseCommand):
                 # shutting down gracefully
                 break
 
-            if not self._tasks.run_next_task(queue):
+            if not self._tasks.run_next_task(queue=queue, exclude_queue=exclude_queue):
                 # there were no tasks in the queue, let's recover.
                 close_connection()
                 logger.debug('waiting for tasks')
