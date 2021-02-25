@@ -17,6 +17,7 @@ class SignalManager(object):
         if platform.system() == 'Windows':
             signal.signal(signal.SIGTERM, self.exit_gracefully)
         else:
+            signal.signal(signal.SIGTERM, self.exit_gracefully)
             signal.signal(signal.SIGTSTP, self.exit_gracefully)
             signal.signal(signal.SIGUSR1, self.speed_up)
             signal.signal(signal.SIGUSR2, self.slow_down)
