@@ -185,7 +185,7 @@ class Task(models.Model):
         ContentType, null=True, blank=True,
         related_name='background_task', on_delete=models.CASCADE
     )
-    creator_object_id = models.PositiveIntegerField(null=True, blank=True)
+    creator_object_id = models.TextField(null=True, blank=True)
     creator = GenericForeignKey('creator_content_type', 'creator_object_id')
 
     objects = TaskManager()
@@ -414,7 +414,7 @@ class CompletedTask(models.Model):
         ContentType, null=True, blank=True,
         related_name='completed_background_task', on_delete=models.CASCADE
     )
-    creator_object_id = models.PositiveIntegerField(null=True, blank=True)
+    creator_object_id = models.TextField(null=True, blank=True)
     creator = GenericForeignKey('creator_content_type', 'creator_object_id')
 
     objects = CompletedTaskQuerySet.as_manager()
