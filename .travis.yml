@@ -17,7 +17,12 @@ matrix:
     # the dist: xenial, sudo: true settings are currently needed to test with python 3.8
     - { python: "3.8", env: TOX_ENV=py38-django30-async, dist: xenial, sudo: true }
     - { python: "3.8", env: TOX_ENV=py38-django30-sync,  dist: xenial, sudo: true }
-    
+
+    # the dist: impish, sudo: true settings are currently needed to test with python 3.9
+    - { python: "3.9", env: TOX_ENV=py39-django40-async, dist: impish, sudo: true }
+    - { python: "3.9", env: TOX_ENV=py39-django40-sync,  dist: impish, sudo: true }
+
+
 install: pip install tox-travis coveralls
 
 script: tox -e $TOX_ENV
