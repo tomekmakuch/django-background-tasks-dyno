@@ -310,10 +310,12 @@ class TestTaskRunner(TransactionTestCase):
         task.save()
         self.failUnless(task.locked_by is None)
         self.failUnless(task.locked_at is None)
+        self.failUnless(task.heroku_dyno_id is None)
 
         locked_task = self.runner.get_task_to_run(tasks)
         self.failIf(locked_task is None)
         self.failIf(locked_task.locked_by is None)
+        self.failIf(locked_task.heroku_dyno_id is None)
         self.assertEqual(self.runner.worker_name, locked_task.locked_by)
         self.failIf(locked_task.locked_at is None)
         self.assertEqual('mytask', locked_task.task_name)
@@ -326,8 +328,9 @@ class TestTaskModel(TransactionTestCase):
         task.save()
         self.failUnless(task.locked_by is None)
         self.failUnless(task.locked_at is None)
+        self.failUnless(task.heroku_dyno_id is None)
 
-        locked_task = task.lock('mylock')
+        locked_task = task.lock('mylock', 'heroku_dyno_name')
         self.assertEqual('mylock', locked_task.locked_by)
         self.failIf(locked_task.locked_at is None)
         self.assertEqual(task.pk, locked_task.pk)
@@ -337,14 +340,14 @@ class TestTaskModel(TransactionTestCase):
         # in memory
         task = Task.objects.new_task('mytask')
         task.save()
-        self.failIf(task.lock('mylock') is None)
+        self.failIf(task.lock('mylock', 'heroku_dyno_name') is None)
 
-        self.failUnless(task.lock('otherlock') is None)
+        self.failUnless(task.lock('otherlock', 'heroku_dyno_name') is None)
 
     def test_lock_expired(self):
         task = Task.objects.new_task('mytask')
         task.save()
-        locked_task = task.lock('mylock')
+        locked_task = task.lock('mylock', 'heroku_dyno_name')
 
         # force expire the lock
         expire_by = timedelta(seconds=(app_settings.BACKGROUND_TASK_MAX_RUN_TIME + 2))
@@ -352,7 +355,7 @@ class TestTaskModel(TransactionTestCase):
         locked_task.save()
 
         # now try to get the lock again
-        self.failIf(task.lock('otherlock') is None)
+        self.failIf(task.lock('otherlock', 'heroku_dyno_name') is None)
 
     def test_str(self):
         task = Task.objects.new_task('mytask')
@@ -462,6 +465,7 @@ class TestTasks(TransactionTestCase):
         self.failUnless(failed_task.run_at > original_task.run_at)
         self.failUnless(failed_task.locked_by is None)
         self.failUnless(failed_task.locked_at is None)
+        self.failUnless(failed_task.heroku_dyno_id is None)
 
     def test_run_next_task_does_not_run_locked(self):
         self.set_fields(locked=True)
@@ -470,7 +474,7 @@ class TestTasks(TransactionTestCase):
         all_tasks = Task.objects.all()
         self.assertEqual(1, all_tasks.count())
         original_task = all_tasks[0]
-        original_task.lock('lockname')
+        original_task.lock('lockname', 'heroku_dyno_name')
 
         self.failIf(run_next_task())
 
@@ -484,7 +488,7 @@ class TestTasks(TransactionTestCase):
         all_tasks = Task.objects.all()
         self.assertEqual(1, all_tasks.count())
         original_task = all_tasks[0]
-        locked_task = original_task.lock('lockname')
+        locked_task = original_task.lock('lockname', 'heroku_dyno_name')
 
         self.failIf(run_next_task())
 

@@ -212,6 +212,7 @@ class DBTaskRunner(object):
 
     def __init__(self):
         self.worker_name = str(os.getpid())
+        self.heroku_dyno_id = os.environ.get('DYNO', f'locally_run_worker.{self.worker_name}')
 
     def schedule(self, task_name, args, kwargs, run_at=None,
                  priority=0, action=TaskSchedule.SCHEDULE, queue=None,
@@ -246,7 +247,7 @@ class DBTaskRunner(object):
                                if task.task_name in tasks._tasks][:5]
             for task in available_tasks:
                 # try to lock task
-                locked_task = task.lock(self.worker_name)
+                locked_task = task.lock(self.worker_name, self.heroku_dyno_id)
                 if locked_task:
                     return locked_task
             return None

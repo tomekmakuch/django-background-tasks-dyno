@@ -177,6 +177,9 @@ class Task(models.Model):
     # details of who's trying to run the task at the moment
     locked_by = models.CharField(max_length=64, db_index=True,
                                  null=True, blank=True)
+    heroku_dyno_id = models.CharField(max_length=64, db_index=True,
+                                 null=True, blank=True)
+                                 
     locked_at = models.DateTimeField(db_index=True, null=True, blank=True)
 
     creator_content_type = models.ForeignKey(
@@ -216,10 +219,10 @@ class Task(models.Model):
         kwargs = dict((str(k), v) for k, v in kwargs.items())
         return args, kwargs
 
-    def lock(self, locked_by):
+    def lock(self, locked_by, heroku_dyno_id):
         now = timezone.now()
         unlocked = Task.objects.unlocked(now).filter(pk=self.pk)
-        updated = unlocked.update(locked_by=locked_by, locked_at=now)
+        updated = unlocked.update(locked_by=locked_by, locked_at=now, heroku_dyno_id=heroku_dyno_id)
         if updated:
             return Task.objects.get(pk=self.pk)
         return None
@@ -261,6 +264,7 @@ class Task(models.Model):
             task_rescheduled.send(sender=self.__class__, task=self)
             self.locked_by = None
             self.locked_at = None
+            self.heroku_dyno_id = None
             self.save()
 
     def create_completed_task(self):
